@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pump Fun Streams - Pump Deck</title>
+  <title>Pump Deck - Live Pump.fun Streams</title>
   <link rel="stylesheet" href="/static/output.css">
   <script src="https://unpkg.com/feather-icons"></script>
 </head>
@@ -11,7 +11,7 @@
   <!-- Navbar -->
   <nav class="bg-gray-800 px-4 py-3 flex items-center justify-between sticky top-0 z-50">
     <div class="flex items-center space-x-4">
-      <a href="#" class="text-2xl font-bold text-green-500">Pump Fun Streams</a>
+      <a href="/" class="text-2xl font-bold text-green-500">Pump Deck</a>
     <div class="hidden md:flex space-x-6">
       <a href="https://www.mobyscreener.com/solana/AcfcL2SZ2Qw7imibKQKCuASUMPKocaZrUrdVVPthpump" 
         target="_blank" 
@@ -70,7 +70,12 @@
 
   <footer class="bg-gray-800 py-8 mt-12">
     <div class="container mx-auto px-4 text-gray-400 text-center">
-      © 2025 $BOBBYLIVE - AcfcL2SZ2Qw7imibKQKCuASUMPKocaZrUrdVVPthpump
+      © 2025 Powered by 
+      <a href="https://www.mobyscreener.com/solana/AcfcL2SZ2Qw7imibKQKCuASUMPKocaZrUrdVVPthpump" 
+         target="_blank" 
+         class="text-green-500 hover:text-green-400">
+         $BOBBYLIVE
+      </a>
     </div>
   </footer>
 
@@ -172,7 +177,6 @@
         if (sortOption === 'viewers-asc') {
           sorted.sort((a, b) => (a.viewerCount || 0) - (b.viewerCount || 0));
         } else {
-          // Default to viewers-desc
           sorted.sort((a, b) => (b.viewerCount || 0) - (a.viewerCount || 0));
         }
         
@@ -180,19 +184,15 @@
       }
 
       function renderStreams(streams) {
-        // Separate featured and live streams first
         const featuredStreams = streams.filter(s => s.featured);
         const liveStreams = streams.filter(s => s.isLive && !s.featured);
         
-        // Sort each section independently
         const sortedFeatured = sortStreams(featuredStreams, currentSortOption);
         const sortedLive = sortStreams(liveStreams, currentSortOption);
 
-        // Update live count
         const totalLive = streams.filter(s => s.isLive).length;
         liveCount.textContent = `${totalLive} ${totalLive === 1 ? 'stream' : 'streams'} live`;
 
-        // Render featured section
         featuredContainer.innerHTML = '';
         if (sortedFeatured.length === 0) {
           showEmptyState(featuredContainer, 'No featured streams');
@@ -204,7 +204,6 @@
           });
         }
 
-        // Render live streams
         container.innerHTML = '';
         if (sortedLive.length === 0) {
           showEmptyState(container, 'No streams currently live');
@@ -228,9 +227,15 @@
         const card = document.createElement('div');
         card.className = 'stream-card bg-gray-800 rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer';
 
+        // Use Cloudflare IPFS gateway for better reliability
+        let thumbnailUrl = stream.thumbnail || '/static/default-thumbnail.jpg';
+        if (thumbnailUrl.includes('ipfs.io/ipfs/')) {
+          thumbnailUrl = thumbnailUrl.replace('ipfs.io/ipfs/', 'cf-ipfs.com/ipfs/');
+        }
+
         card.innerHTML = `
           <div class="relative">
-            <img src="${stream.thumbnail || '/static/default-thumbnail.jpg'}" 
+            <img src="${thumbnailUrl}" 
                  alt="${stream.title}" 
                  class="w-full h-40 object-cover stream-thumbnail"
                  onerror="this.onerror=null;this.src='/static/default-thumbnail.jpg';">
@@ -293,10 +298,7 @@
         }
       });
 
-      // Initial load
       fetchStreams(false);
-      
-      // Auto-refresh every 90 seconds with indicator
       setInterval(() => fetchStreams(true), 90000);
     });
   </script>
