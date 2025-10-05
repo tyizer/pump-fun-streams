@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pump Fun Streams</title>
+  <title>Pump Fun Streams - Pump Deck</title>
   <link rel="stylesheet" href="/static/output.css">
   <script src="https://unpkg.com/feather-icons"></script>
 </head>
@@ -12,9 +12,13 @@
   <nav class="bg-gray-800 px-4 py-3 flex items-center justify-between sticky top-0 z-50">
     <div class="flex items-center space-x-4">
       <a href="#" class="text-2xl font-bold text-green-500">Pump Fun Streams</a>
-      <div class="hidden md:flex space-x-6">
-        <a href="#" class="hover:text-purple-400">Home</a>
-      </div>
+    <div class="hidden md:flex space-x-6">
+      <a href="https://www.mobyscreener.com/solana/AcfcL2SZ2Qw7imibKQKCuASUMPKocaZrUrdVVPthpump" 
+        target="_blank" 
+        class="hover:text-purple-400">
+        Powered By $BOBBYLIVE
+      </a>
+    </div>
       <!-- Refresh Indicator -->
       <div id="refresh-indicator" class="hidden flex items-center space-x-2 text-sm text-gray-400">
         <svg class="w-4 h-4 spinner" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -25,7 +29,7 @@
     </div>
     <div class="flex items-center space-x-4">
       <div class="relative">
-        <input id="search-input" type="text" placeholder="Search by title or streamer..." 
+        <input id="search-input" type="text" placeholder="Search" 
                class="bg-gray-700 px-4 py-2 rounded-md w-64 focus:outline-none focus:ring-2 focus:ring-purple-500">
         <i data-feather="search" class="absolute right-3 top-2.5 text-gray-400"></i>
       </div>
@@ -66,7 +70,7 @@
 
   <footer class="bg-gray-800 py-8 mt-12">
     <div class="container mx-auto px-4 text-gray-400 text-center">
-      © 2025 Pump Fun Streams. All rights reserved.
+      © 2025 $BOBBYLIVE - AcfcL2SZ2Qw7imibKQKCuASUMPKocaZrUrdVVPthpump
     </div>
   </footer>
 
@@ -248,8 +252,7 @@
           </div>
           <div class="p-3">
             <h3 class="font-medium truncate">${stream.title}</h3>
-            <p class="text-gray-400 text-sm">${stream.streamerName}</p>
-            <p class="text-gray-500 text-sm">${stream.gameCategory}</p>
+            <p class="text-gray-400 text-sm">${stream.streamerName}</p>            
           </div>
         `;
         cardLink.appendChild(card);
