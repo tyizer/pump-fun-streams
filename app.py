@@ -122,13 +122,18 @@ async def fetch_live_streams(session, limit=100, include_viewers=True):
             if mint_id in blacklist:
                 continue
 
+            # Get thumbnail and replace IPFS gateway for better reliability
+            thumbnail = coin.get("image_uri", "")
+            if thumbnail and "ipfs.io/ipfs/" in thumbnail:
+                thumbnail = thumbnail.replace("ipfs.io/ipfs/", "cf-ipfs.com/ipfs/")
+
             all_streams.append({
                 "title": "Unknown Title",
                 "streamerName": coin.get("name", "Unknown"),
                 "gameCategory": "Crypto",
                 "mintId": mint_id,
                 "url": f"https://pump.fun/{mint_id}",
-                "thumbnail": coin.get("image_uri", ""),
+                "thumbnail": thumbnail,
                 "viewers": 0,
                 "isLive": False
             })
