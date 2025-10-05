@@ -233,7 +233,6 @@
             <img src="${stream.thumbnail || '/static/default-thumbnail.jpg'}" 
                  alt="${stream.title}" 
                  class="w-full h-40 object-cover stream-thumbnail"
-                 loading="lazy"
                  onerror="this.onerror=null;this.src='/static/default-thumbnail.jpg';">
 
             ${stream.isLive ? `
