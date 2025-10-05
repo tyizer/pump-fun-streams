@@ -329,12 +329,10 @@ def initialize_files():
                 json.dump(default_content, f)
             print(f"✅ Created {filepath}")
 
+# Always initialize and start scraper on import
+initialize_files()
+start_scraper_thread()
+
 if __name__ == '__main__':
     # Local development
-    initialize_files()
-    start_scraper_thread()
     app.run(debug=True, host='0.0.0.0', port=5000)
-else:
-    # Production (Gunicorn)
-    initialize_files()
-    start_scraper_thread()
