@@ -227,10 +227,12 @@
         const card = document.createElement('div');
         card.className = 'stream-card bg-gray-800 rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer';
 
-        // Use Cloudflare IPFS gateway for better reliability
+        // Use dweb.link IPFS gateway for better reliability
         let thumbnailUrl = stream.thumbnail || '/static/default-thumbnail.jpg';
         if (thumbnailUrl.includes('ipfs.io/ipfs/')) {
-          thumbnailUrl = thumbnailUrl.replace('ipfs.io/ipfs/', 'cf-ipfs.com/ipfs/');
+          thumbnailUrl = thumbnailUrl.replace('ipfs.io/ipfs/', 'dweb.link/ipfs/');
+        } else if (thumbnailUrl.includes('cf-ipfs.com/ipfs/')) {
+          thumbnailUrl = thumbnailUrl.replace('cf-ipfs.com/ipfs/', 'dweb.link/ipfs/');
         }
 
         card.innerHTML = `
