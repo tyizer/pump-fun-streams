@@ -13,8 +13,8 @@ LIST_API = "https://frontend-api-v3.pump.fun/coins/currently-live"
 DETAIL_API = "https://livestream-api.pump.fun/livestream?mintId={}"
 
 # JSON files are in root directory (one level up from scraper/)
-BLACKLIST_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "blacklist.json")
-OUTPUT_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "pumpfun_streams.json")
+BLACKLIST_FILE = "/data/blacklist.json"
+OUTPUT_FILE = "/data/pumpfun_streams.json"
 
 # Graceful shutdown flag
 shutdown_flag = False
