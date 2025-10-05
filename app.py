@@ -5,10 +5,10 @@ import os
 app = Flask(__name__, static_folder='static')
 
 # File paths
-BLACKLIST_FILE = "blacklist.json"
-FEATURED_FILE = "featured.json"
-STREAMS_FILE = "pumpfun_streams.json"
-FEATURED_CACHE_FILE = "featured_cache.json"
+BLACKLIST_FILE = "/data/blacklist.json"
+FEATURED_FILE = "/data/featured.json"
+STREAMS_FILE = "/data/pumpfun_streams.json"
+FEATURED_CACHE_FILE = "/data/featured_cache.json"
 
 def load_json_set(file_path):
     """Load a JSON file as a set for fast lookup, return empty set if missing."""
