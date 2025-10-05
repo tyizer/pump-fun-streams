@@ -125,7 +125,9 @@ async def fetch_live_streams(session, limit=100, include_viewers=True):
             # Get thumbnail and replace IPFS gateway for better reliability
             thumbnail = coin.get("image_uri", "")
             if thumbnail and "ipfs.io/ipfs/" in thumbnail:
-                thumbnail = thumbnail.replace("ipfs.io/ipfs/", "cf-ipfs.com/ipfs/")
+                thumbnail = thumbnail.replace("ipfs.io/ipfs/", "dweb.link/ipfs/")
+            elif thumbnail and "cf-ipfs.com/ipfs/" in thumbnail:
+                thumbnail = thumbnail.replace("cf-ipfs.com/ipfs/", "dweb.link/ipfs/")
 
             all_streams.append({
                 "title": "Unknown Title",
