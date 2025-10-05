@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pump Fun Streams</title>
+  <link rel="stylesheet" href="/static/output.css">
+  <script src="https://unpkg.com/feather-icons"></script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+  <!-- Navbar -->
+  <nav class="bg-gray-800 px-4 py-3 flex items-center justify-between sticky top-0 z-50">
+    <div class="flex items-center space-x-4">
+      <a href="#" class="text-2xl font-bold text-green-500">Pump Fun Streams</a>
+      <div class="hidden md:flex space-x-6">
+        <a href="#" class="hover:text-purple-400">Home</a>
+      </div>
+      <!-- Refresh Indicator -->
+      <div id="refresh-indicator" class="hidden flex items-center space-x-2 text-sm text-gray-400">
+        <svg class="w-4 h-4 spinner" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+        </svg>
+        <span>Refreshing...</span>
+      </div>
+    </div>
+    <div class="flex items-center space-x-4">
+      <div class="relative">
+        <input id="search-input" type="text" placeholder="Search by title or streamer..." 
+               class="bg-gray-700 px-4 py-2 rounded-md w-64 focus:outline-none focus:ring-2 focus:ring-purple-500">
+        <i data-feather="search" class="absolute right-3 top-2.5 text-gray-400"></i>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Featured Streams -->
+  <main class="container mx-auto px-4 py-6">
+    <section id="featured-section" class="mb-8">
+      <h2 class="text-2xl font-bold mb-4">Featured Streams</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6" id="featured-container">
+        <!-- Featured stream cards inserted here -->
+      </div>
+    </section>
+
+    <!-- Live Now -->
+    <section>
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+        <h2 class="text-2xl font-bold">Live Now</h2>
+        <div class="flex items-center gap-4 w-full sm:w-auto">
+          <div id="live-count" class="text-gray-400 text-sm"></div>
+          <div class="relative">
+            <select id="sort-select" class="bg-gray-700 px-4 py-2 pr-10 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 cursor-pointer appearance-none">
+              <option value="viewers-desc">Most Viewers</option>
+              <option value="viewers-asc">Least Viewers</option>
+            </select>
+            <svg class="absolute right-3 top-3 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6" id="streams-container">
+        <!-- Live stream cards inserted here -->
+      </div>
+    </section>
+  </main>
+
+  <footer class="bg-gray-800 py-8 mt-12">
+    <div class="container mx-auto px-4 text-gray-400 text-center">
+      © 2025 Pump Fun Streams. All rights reserved.
+    </div>
+  </footer>
+
+  <script>
+    feather.replace();
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const container = document.getElementById('streams-container');
+      const featuredContainer = document.getElementById('featured-container');
+      const searchInput = document.getElementById('search-input');
+      const sortSelect = document.getElementById('sort-select');
+      const refreshIndicator = document.getElementById('refresh-indicator');
+      const liveCount = document.getElementById('live-count');
+      let streamsData = [];
+      let isLoading = false;
+      let isInitialLoad = true;
+      let currentSortOption = 'viewers-desc';
+
+      function createSkeletonCard() {
+        const card = document.createElement('div');
+        card.className = 'bg-gray-800 rounded-lg overflow-hidden';
+        card.innerHTML = `
+          <div class="skeleton w-full h-40"></div>
+          <div class="p-3 space-y-2">
+            <div class="skeleton h-5 w-3/4 rounded"></div>
+            <div class="skeleton h-4 w-1/2 rounded"></div>
+            <div class="skeleton h-4 w-2/3 rounded"></div>
+          </div>
+        `;
+        return card;
+      }
+
+      function showSkeletons(container, count = 5) {
+        container.innerHTML = '';
+        for (let i = 0; i < count; i++) {
+          container.appendChild(createSkeletonCard());
+        }
+      }
+
+      function showEmptyState(container, message) {
+        container.innerHTML = `
+          <div class="col-span-full text-center py-12">
+            <svg class="w-16 h-16 mx-auto text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+            </svg>
+            <p class="text-gray-400 text-lg">${message}</p>
+          </div>
+        `;
+      }
+
+      async function fetchStreams(showRefreshIndicator = false) {
+        if (isLoading) return;
+        isLoading = true;
+
+        if (isInitialLoad) {
+          showSkeletons(featuredContainer, 3);
+          showSkeletons(container, 10);
+        }
+
+        if (showRefreshIndicator) {
+          refreshIndicator.classList.remove('hidden');
+          refreshIndicator.classList.add('flex');
+        }
+
+        try {
+          const response = await fetch('/api/streams');
+          if (!response.ok) throw new Error('Network response was not ok');
+          const data = await response.json();
+          streamsData = data.streams;
+          renderStreams(streamsData);
+          isInitialLoad = false;
+        } catch (err) {
+          console.error('Failed to fetch streams:', err);
+          container.innerHTML = `
+            <div class="col-span-full text-center py-12">
+              <svg class="w-16 h-16 mx-auto text-red-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <p class="text-red-500 text-lg mb-2">Failed to load streams</p>
+              <button onclick="location.reload()" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-md text-sm">
+                Try Again
+              </button>
+            </div>
+          `;
+        } finally {
+          isLoading = false;
+          if (showRefreshIndicator) {
+            setTimeout(() => {
+              refreshIndicator.classList.add('hidden');
+              refreshIndicator.classList.remove('flex');
+            }, 500);
+          }
+        }
+      }
+
+      function sortStreams(streams, sortOption) {
+        const sorted = [...streams];
+        
+        if (sortOption === 'viewers-asc') {
+          sorted.sort((a, b) => (a.viewerCount || 0) - (b.viewerCount || 0));
+        } else {
+          // Default to viewers-desc
+          sorted.sort((a, b) => (b.viewerCount || 0) - (a.viewerCount || 0));
+        }
+        
+        return sorted;
+      }
+
+      function renderStreams(streams) {
+        // Separate featured and live streams first
+        const featuredStreams = streams.filter(s => s.featured);
+        const liveStreams = streams.filter(s => s.isLive && !s.featured);
+        
+        // Sort each section independently
+        const sortedFeatured = sortStreams(featuredStreams, currentSortOption);
+        const sortedLive = sortStreams(liveStreams, currentSortOption);
+
+        // Update live count
+        const totalLive = streams.filter(s => s.isLive).length;
+        liveCount.textContent = `${totalLive} ${totalLive === 1 ? 'stream' : 'streams'} live`;
+
+        // Render featured section
+        featuredContainer.innerHTML = '';
+        if (sortedFeatured.length === 0) {
+          showEmptyState(featuredContainer, 'No featured streams');
+        } else {
+          sortedFeatured.forEach(stream => {
+            const card = createStreamCard(stream);
+            card.classList.add('fade-in');
+            featuredContainer.appendChild(card);
+          });
+        }
+
+        // Render live streams
+        container.innerHTML = '';
+        if (sortedLive.length === 0) {
+          showEmptyState(container, 'No streams currently live');
+        } else {
+          sortedLive.forEach(stream => {
+            const card = createStreamCard(stream);
+            card.classList.add('fade-in');
+            container.appendChild(card);
+          });
+        }
+
+        feather.replace();
+      }
+
+      function createStreamCard(stream) {
+        const cardLink = document.createElement('a');
+        cardLink.href = stream.url;
+        cardLink.target = "_blank";
+        cardLink.className = "card-link";
+
+        const card = document.createElement('div');
+        card.className = 'stream-card bg-gray-800 rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer';
+
+        card.innerHTML = `
+          <div class="relative">
+            <img src="${stream.thumbnail || '/static/default-thumbnail.jpg'}" 
+                 alt="${stream.title}" 
+                 class="w-full h-40 object-cover stream-thumbnail"
+                 loading="lazy"
+                 onerror="this.onerror=null;this.src='/static/default-thumbnail.jpg';">
+
+            ${stream.isLive ? `
+              <div class="absolute top-2 left-2 bg-red-600 px-2 py-1 rounded-md flex items-center">
+                <span class="live-indicator w-2 h-2 bg-white rounded-full mr-2"></span>
+                <span class="text-xs font-semibold">LIVE</span>
+              </div>
+              <div class="absolute bottom-2 left-2 bg-black bg-opacity-70 px-2 py-1 rounded-md text-xs">
+                <span>${(stream.viewerCount || 0).toLocaleString()} viewers</span>
+              </div>
+            ` : `
+              <div class="absolute top-2 left-2 bg-gray-600 px-2 py-1 rounded-md flex items-center">
+                <span class="text-xs font-semibold">OFFLINE</span>
+              </div>
+            `}
+          </div>
+          <div class="p-3">
+            <h3 class="font-medium truncate">${stream.title}</h3>
+            <p class="text-gray-400 text-sm">${stream.streamerName}</p>
+            <p class="text-gray-500 text-sm">${stream.gameCategory}</p>
+          </div>
+        `;
+        cardLink.appendChild(card);
+        return cardLink;
+      }
+
+      searchInput.addEventListener('input', function() {
+        const query = this.value.toLowerCase();
+        if (query === '') {
+          renderStreams(streamsData);
+        } else {
+          const filtered = streamsData.filter(s =>
+            s.title.toLowerCase().includes(query) ||
+            s.streamerName.toLowerCase().includes(query)
+          );
+          
+          if (filtered.length === 0) {
+            container.innerHTML = '';
+            featuredContainer.innerHTML = '';
+            showEmptyState(container, `No results found for "${query}"`);
+          } else {
+            renderStreams(filtered);
+          }
+        }
+      });
+
+      sortSelect.addEventListener('change', function() {
+        currentSortOption = this.value;
+        const query = searchInput.value.toLowerCase();
+        
+        if (query === '') {
+          renderStreams(streamsData);
+        } else {
+          const filtered = streamsData.filter(s =>
+            s.title.toLowerCase().includes(query) ||
+            s.streamerName.toLowerCase().includes(query)
+          );
+          renderStreams(filtered);
+        }
+      });
+
+      // Initial load
+      fetchStreams(false);
+      
+      // Auto-refresh every 90 seconds with indicator
+      setInterval(() => fetchStreams(true), 90000);
+    });
+  </script>
+</body>
+</html>
