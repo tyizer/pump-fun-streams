@@ -122,13 +122,16 @@ async def fetch_live_streams(session, limit=100, include_viewers=True):
             if mint_id in blacklist:
                 continue
 
-            # Get thumbnail and replace IPFS gateway for better reliability
-            thumbnail = coin.get("image_uri", "")
-            if thumbnail and "ipfs.io/ipfs/" in thumbnail:
-                thumbnail = thumbnail.replace("ipfs.io/ipfs/", "dweb.link/ipfs/")
-            elif thumbnail and "cf-ipfs.com/ipfs/" in thumbnail:
-                thumbnail = thumbnail.replace("cf-ipfs.com/ipfs/", "dweb.link/ipfs/")
-
+            # Use imagedelivery.net CDN (more reliable than IPFS)
+            thumbnail = f"https://imagedelivery.net/WL1JOIJiM_NAChp6rtB6Cw/coin-image/{mint_id}/256x256?alpha=true"
+            
+            # Keep IPFS as backup
+            ipfs_thumbnail = coin.get("image_uri", "")
+            if ipfs_thumbnail and "ipfs.io/ipfs/" in ipfs_thumbnail:
+                ipfs_thumbnail = ipfs_thumbnail.replace("ipfs.io/ipfs/", "dweb.link/ipfs/")
+            elif ipfs_thumbnail and "cf-ipfs.com/ipfs/" in ipfs_thumbnail:
+                ipfs_thumbnail = ipfs_thumbnail.replace("cf-ipfs.com/ipfs/", "dweb.link/ipfs/")
+            
             all_streams.append({
                 "title": "Unknown Title",
                 "streamerName": coin.get("name", "Unknown"),
@@ -136,6 +139,7 @@ async def fetch_live_streams(session, limit=100, include_viewers=True):
                 "mintId": mint_id,
                 "url": f"https://pump.fun/{mint_id}",
                 "thumbnail": thumbnail,
+                "ipfsThumbnail": ipfs_thumbnail,
                 "viewers": 0,
                 "isLive": False
             })
