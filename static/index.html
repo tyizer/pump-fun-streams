@@ -223,21 +223,23 @@
         cardLink.href = stream.url;
         cardLink.target = "_blank";
         cardLink.className = "card-link";
-
+      
         const card = document.createElement('div');
         card.className = 'stream-card bg-gray-800 rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer';
-
-        // Use imagedelivery.net CDN as primary, IPFS as fallback
+      
+        // Triple fallback: CDN -> Pinata -> IPFS -> Default
         const thumbnailUrl = stream.thumbnail || '/static/default-thumbnail.jpg';
-        const fallbackUrl = stream.ipfsThumbnail || '/static/default-thumbnail.jpg';
-
+        const pinataThumbnail = stream.pinataThumbnail || stream.ipfsThumbnail || '/static/default-thumbnail.jpg';
+        const finalFallback = stream.ipfsThumbnail || '/static/default-thumbnail.jpg';
+      
         card.innerHTML = `
           <div class="relative">
             <img src="${thumbnailUrl}" 
                  alt="${stream.title}" 
                  class="w-full h-40 object-cover stream-thumbnail"
-                 loading="lazy"
-                 onerror="this.onerror=null;this.src='${fallbackUrl}';">
+                 data-pinata="${pinataThumbnail}"
+                 data-ipfs="${finalFallback}"
+                 onerror="if(this.dataset.pinata && this.src !== this.dataset.pinata) { this.src = this.dataset.pinata; } else if(this.dataset.ipfs) { this.onerror=null; this.src = this.dataset.ipfs; }">
 
             ${stream.isLive ? `
               <div class="absolute top-2 left-2 bg-red-600 px-2 py-1 rounded-md flex items-center">
