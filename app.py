@@ -216,7 +216,7 @@ async def run_scraper():
                 continue
             
             # Sleep in small intervals to check shutdown flag
-            for _ in range(90):
+            for _ in range(300):
                 if shutdown_flag:
                     break
                 await asyncio.sleep(1)
