@@ -121,24 +121,30 @@ async def fetch_live_streams(session, limit=100, include_viewers=True):
             mint_id = coin.get("mint")
             if mint_id in blacklist:
                 continue
-
-            # Use imagedelivery.net CDN (more reliable than IPFS)
-            thumbnail = f"https://imagedelivery.net/WL1JOIJiM_NAChp6rtB6Cw/coin-image/{mint_id}/256x256?alpha=true"
+        
+            # Build multiple thumbnail sources for fallback
+            # 1. imagedelivery.net CDN (most reliable)
+            cdn_thumbnail = f"https://imagedelivery.net/WL1JOIJiM_NAChp6rtB6Cw/coin-image/{mint_id}/256x256?alpha=true"
             
-            # Keep IPFS as backup
+            # 2. Pinata IPFS with image optimization
+            ipfs_hash = coin.get("image_uri", "").split("/ipfs/")[-1] if coin.get("image_uri") else ""
+            pinata_thumbnail = f"https://pump.mypinata.cloud/ipfs/{ipfs_hash}?img-width=256&img-height=256&img-fit=cover&img-dpr=1&img-onerror=redirect" if ipfs_hash else ""
+            
+            # 3. IPFS via dweb.link
             ipfs_thumbnail = coin.get("image_uri", "")
             if ipfs_thumbnail and "ipfs.io/ipfs/" in ipfs_thumbnail:
                 ipfs_thumbnail = ipfs_thumbnail.replace("ipfs.io/ipfs/", "dweb.link/ipfs/")
             elif ipfs_thumbnail and "cf-ipfs.com/ipfs/" in ipfs_thumbnail:
                 ipfs_thumbnail = ipfs_thumbnail.replace("cf-ipfs.com/ipfs/", "dweb.link/ipfs/")
-            
+        
             all_streams.append({
                 "title": "Unknown Title",
                 "streamerName": coin.get("name", "Unknown"),
                 "gameCategory": "Crypto",
                 "mintId": mint_id,
                 "url": f"https://pump.fun/{mint_id}",
-                "thumbnail": thumbnail,
+                "thumbnail": cdn_thumbnail,
+                "pinataThumbnail": pinata_thumbnail,
                 "ipfsThumbnail": ipfs_thumbnail,
                 "viewers": 0,
                 "isLive": False
