@@ -108,8 +108,19 @@ async def fetch_live_streams(session, limit=100, include_viewers=True):
         
         try:
             async with session.get(LIST_API, params=params, timeout=aiohttp.ClientTimeout(total=15)) as r:
+                if r.status == 429:
+                    print(f"⚠️ Rate limited! Waiting 60 seconds...")
+                    await asyncio.sleep(60)
+                    continue
                 r.raise_for_status()
                 data = await r.json()
+        except aiohttp.ClientResponseError as e:
+            if e.status == 429:
+                print(f"⚠️ Rate limited! Waiting 60 seconds...")
+                await asyncio.sleep(60)
+                continue
+            print(f"❌ Error fetching streams at offset {offset}: {e}")
+            break
         except Exception as e:
             print(f"❌ Error fetching streams at offset {offset}: {e}")
             break
@@ -160,7 +171,7 @@ async def fetch_live_streams(session, limit=100, include_viewers=True):
             break
 
         offset += limit
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(2)  # 2 second delay between paginated requests
 
     if include_viewers and not shutdown_flag:
         print("⚡ Fetching viewer counts and titles asynchronously...")
@@ -207,7 +218,7 @@ async def run_scraper():
 
                     elapsed = time.time() - start_time
                     print(f"\n✅ Collected {len(streams)} live streams in {elapsed:.2f}s.")
-                    print(f"⏱️  Waiting 90 seconds before next update...\n")
+                    print(f"⏱️  Waiting 3 minutes before next update...\n")
                 
             except Exception as e:
                 print(f"❌ Error in scraper loop: {e}")
@@ -215,8 +226,8 @@ async def run_scraper():
                     await asyncio.sleep(30)
                 continue
             
-            # Sleep in small intervals to check shutdown flag
-            for _ in range(300):
+            # Sleep in small intervals to check shutdown flag (3 minutes)
+            for _ in range(180):
                 if shutdown_flag:
                     break
                 await asyncio.sleep(1)
