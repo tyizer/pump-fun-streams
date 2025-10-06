@@ -121,22 +121,28 @@ async def fetch_live_streams(session, limit=100, include_viewers=True):
             mint_id = coin.get("mint")
             if mint_id in blacklist:
                 continue
-        
+
             # Build multiple thumbnail sources for fallback
             # 1. imagedelivery.net CDN (most reliable)
             cdn_thumbnail = f"https://imagedelivery.net/WL1JOIJiM_NAChp6rtB6Cw/coin-image/{mint_id}/256x256?alpha=true"
             
-            # 2. Pinata IPFS with image optimization
-            ipfs_hash = coin.get("image_uri", "").split("/ipfs/")[-1] if coin.get("image_uri") else ""
+            # 2. Extract IPFS hash properly for Pinata
+            image_uri = coin.get("image_uri", "")
+            ipfs_hash = ""
+            if image_uri:
+                if "/ipfs/" in image_uri:
+                    ipfs_hash = image_uri.split("/ipfs/")[-1]
+                elif image_uri.startswith("Qm") or image_uri.startswith("baf"):
+                    # Already just the hash
+                    ipfs_hash = image_uri
+            
             pinata_thumbnail = f"https://pump.mypinata.cloud/ipfs/{ipfs_hash}?img-width=256&img-height=256&img-fit=cover&img-dpr=1&img-onerror=redirect" if ipfs_hash else ""
             
             # 3. IPFS via dweb.link
-            ipfs_thumbnail = coin.get("image_uri", "")
-            if ipfs_thumbnail and "ipfs.io/ipfs/" in ipfs_thumbnail:
-                ipfs_thumbnail = ipfs_thumbnail.replace("ipfs.io/ipfs/", "dweb.link/ipfs/")
-            elif ipfs_thumbnail and "cf-ipfs.com/ipfs/" in ipfs_thumbnail:
-                ipfs_thumbnail = ipfs_thumbnail.replace("cf-ipfs.com/ipfs/", "dweb.link/ipfs/")
-        
+            ipfs_thumbnail = ""
+            if ipfs_hash:
+                ipfs_thumbnail = f"https://dweb.link/ipfs/{ipfs_hash}"
+
             all_streams.append({
                 "title": "Unknown Title",
                 "streamerName": coin.get("name", "Unknown"),
@@ -282,6 +288,8 @@ def get_streams():
         stream_data = {
             "title": s.get("title", "Unknown Stream"),
             "thumbnail": s.get("thumbnail", ""),
+            "pinataThumbnail": s.get("pinataThumbnail", ""),
+            "ipfsThumbnail": s.get("ipfsThumbnail", ""),
             "viewerCount": viewer_count,
             "streamerName": s.get("streamerName", "Unknown"),
             "gameCategory": s.get("gameCategory", "Unknown"),
@@ -302,6 +310,8 @@ def get_streams():
             transformed.append({
                 "title": cached.get("title", "Unknown Stream"),
                 "thumbnail": cached.get("thumbnail", ""),
+                "pinataThumbnail": "",
+                "ipfsThumbnail": "",
                 "viewerCount": 0,
                 "streamerName": cached.get("streamerName", "Unknown"),
                 "gameCategory": cached.get("gameCategory", "Unknown"),
