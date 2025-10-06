@@ -227,20 +227,17 @@
         const card = document.createElement('div');
         card.className = 'stream-card bg-gray-800 rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer';
 
-        // Use dweb.link IPFS gateway for better reliability
-        let thumbnailUrl = stream.thumbnail || '/static/default-thumbnail.jpg';
-        if (thumbnailUrl.includes('ipfs.io/ipfs/')) {
-          thumbnailUrl = thumbnailUrl.replace('ipfs.io/ipfs/', 'dweb.link/ipfs/');
-        } else if (thumbnailUrl.includes('cf-ipfs.com/ipfs/')) {
-          thumbnailUrl = thumbnailUrl.replace('cf-ipfs.com/ipfs/', 'dweb.link/ipfs/');
-        }
+        // Use imagedelivery.net CDN as primary, IPFS as fallback
+        const thumbnailUrl = stream.thumbnail || '/static/default-thumbnail.jpg';
+        const fallbackUrl = stream.ipfsThumbnail || '/static/default-thumbnail.jpg';
 
         card.innerHTML = `
           <div class="relative">
             <img src="${thumbnailUrl}" 
                  alt="${stream.title}" 
                  class="w-full h-40 object-cover stream-thumbnail"
-                 onerror="this.onerror=null;this.src='/static/default-thumbnail.jpg';">
+                 loading="lazy"
+                 onerror="this.onerror=null;this.src='${fallbackUrl}';">
 
             ${stream.isLive ? `
               <div class="absolute top-2 left-2 bg-red-600 px-2 py-1 rounded-md flex items-center">
