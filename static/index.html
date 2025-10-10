@@ -223,23 +223,23 @@
         cardLink.href = stream.url;
         cardLink.target = "_blank";
         cardLink.className = "card-link";
-      
+
         const card = document.createElement('div');
         card.className = 'stream-card bg-gray-800 rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer';
-      
+
         // Triple fallback: CDN -> Pinata -> IPFS -> Default
         const thumbnailUrl = stream.thumbnail || '/static/default-thumbnail.jpg';
-        const pinataThumbnail = stream.pinataThumbnail || stream.ipfsThumbnail || '/static/default-thumbnail.jpg';
-        const finalFallback = stream.ipfsThumbnail || '/static/default-thumbnail.jpg';
-      
+        const pinataThumbnail = stream.pinataThumbnail || '';
+        const ipfsThumbnail = stream.ipfsThumbnail || '';
+
         card.innerHTML = `
           <div class="relative">
             <img src="${thumbnailUrl}" 
                  alt="${stream.title}" 
                  class="w-full h-40 object-cover stream-thumbnail"
                  data-pinata="${pinataThumbnail}"
-                 data-ipfs="${finalFallback}"
-                 onerror="if(this.dataset.pinata && this.src !== this.dataset.pinata) { this.src = this.dataset.pinata; } else if(this.dataset.ipfs) { this.onerror=null; this.src = this.dataset.ipfs; }">
+                 data-ipfs="${ipfsThumbnail}"
+                 onerror="if(this.dataset.pinata && this.src !== this.dataset.pinata) { this.src = this.dataset.pinata; } else if(this.dataset.ipfs && this.src !== this.dataset.ipfs) { this.onerror=null; this.src = this.dataset.ipfs; } else { this.onerror=null; this.src='/static/default-thumbnail.jpg'; }">
 
             ${stream.isLive ? `
               <div class="absolute top-2 left-2 bg-red-600 px-2 py-1 rounded-md flex items-center">
@@ -300,7 +300,8 @@
       });
 
       fetchStreams(false);
-      setInterval(() => fetchStreams(true), 180000);  // 3 minutes
+      // Auto-refresh every 5 minutes
+      setInterval(() => fetchStreams(true), 300000);
     });
   </script>
 </body>
