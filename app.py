@@ -174,9 +174,17 @@ async def fetch_live_streams(session, limit=100, include_viewers=True):
         await asyncio.sleep(2)  # 2 second delay between paginated requests
 
     if include_viewers and not shutdown_flag:
-        print("⚡ Fetching viewer counts and titles asynchronously...")
-        tasks = [fetch_stream_detail(session, s) for s in all_streams]
-        await asyncio.gather(*tasks)
+        print("⚡ Fetching viewer counts and titles in batches...")
+        # Fetch in smaller batches to avoid rate limits
+        batch_size = 10
+        for i in range(0, len(all_streams), batch_size):
+            if shutdown_flag:
+                break
+            batch = all_streams[i:i + batch_size]
+            tasks = [fetch_stream_detail(session, s) for s in batch]
+            await asyncio.gather(*tasks)
+            if i + batch_size < len(all_streams):
+                await asyncio.sleep(1)  # 1 second between batches
 
         retry_count = 0
         for stream in all_streams:
@@ -194,6 +202,7 @@ async def fetch_live_streams(session, limit=100, include_viewers=True):
                             stream["viewers"] = details.get("numParticipants", 0)
                             stream["isLive"] = details.get("isLive", False)
                             retry_count += 1
+                        await asyncio.sleep(0.5)  # Small delay between retries
                 except Exception as e:
                     stream["title"] = f"Live Stream of {stream['streamerName']}"
         
@@ -218,7 +227,7 @@ async def run_scraper():
 
                     elapsed = time.time() - start_time
                     print(f"\n✅ Collected {len(streams)} live streams in {elapsed:.2f}s.")
-                    print(f"⏱️  Waiting 3 minutes before next update...\n")
+                    print(f"⏱️  Waiting 5 minutes before next update...\n")
                 
             except Exception as e:
                 print(f"❌ Error in scraper loop: {e}")
@@ -226,8 +235,8 @@ async def run_scraper():
                     await asyncio.sleep(30)
                 continue
             
-            # Sleep in small intervals to check shutdown flag (3 minutes)
-            for _ in range(180):
+            # Sleep in small intervals to check shutdown flag (5 minutes)
+            for _ in range(300):
                 if shutdown_flag:
                     break
                 await asyncio.sleep(1)
